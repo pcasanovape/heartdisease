@@ -1,25 +1,16 @@
-
-# Práctica 1: Web scraping
+# Pràctica 2. Tipologia i cicle de vida de les dades
 
 ## Descripció
-
-Practica 1 de l'assignatura Tipologia i cicle de vida de les dades del Master de cienca de dades de la UOC.
-
-En aquesta primera pràctica de l’assignatura Tipologia i cicle de vida de les dades s’ha
-implementat una tènica de web scraping mitjançant una web crawler o aranya, per a generar
-una base de dades d’enfonsaments de vaixells a tot el món al llarg de la història a partir de la
-pàgina “List of shipwrecks” de Wikipedia. La font original es pot consultar en aquest enllaç:
-https://en.wikipedia.org/wiki/Lists_of_shipwrecks
+**Pràctica 2 de l'assignatura Tipologia i cicle de vida de les dades del Màster de Ciència de dades de la UOC**
+En aquesta segona pràctica de l’assignatura Tipologia i cicle de vida de les dades s’ha realitzat un projecte d'integració, neteja i anàlisi de dades a partir d'un dataset relacionat amb la prevenció de malalties cardiovasculars.
 
 ## Equip
+Activitat realitzada per **Pau Casanova Pedrol**.
 
-Activitat realitzada per **Oriol Caravaca Müller** i **Pau Casanova Pedrol**.
-
-## Dataset
-
- https://doi.org/10.5281/zenodo.7347768
+## Dataset original
+https:/, /www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
  
-## Codi font rellevant
+## Descripció dels fitxers
 
 * **source/requirements.txt**: Conte la informació dels requeriments de l'entorn.
 * **source/main.py**: Punt de entrada del programa. Inicia el process de webscraping.
