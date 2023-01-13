@@ -1,0 +1,253 @@
+---
+title: "PRÀCTICA 2 - Tipologia i cicle de vida de les dades"
+author: "Pau Casanova Pedrol"
+date: "Gener 2023"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+******
+# 1. Descripció del dataset
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Carreguem els paquets R que utilitzarem.
+library(ggplot2)
+
+# Carreguem el joc de dades.
+heart <- read.csv('datasets/heart.csv')
+
+# Verifiquem l'estructura del conjunt de dades.
+str(heart)
+```
+
+Podem veure que el dataset carregat conté 303 registres amb 14 variables diferents. De cada variable n'observem el tipus amb la funció str(), i pel que fa a les variables quantitatives podem obtenir una primera descripció de la seva estructura amb la funció summary(), que ens mostra alguns valors il·lustratius de cada atribut com la mitja, la mediana, el valor màxim, el valor mínim o els quartils.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Examinem les primeres files del conjunt de dades.
+head(heart)
+
+# Examinem els valors resum de cada tipus de variable.
+summary(heart)
+```
+Acabarem aquest primer anàlisi exploratori de l'estructura de les dades per mitjà d'algunes visualitzacions, per observar les freqüències dels valors en cada variable o la seva distribució.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Visualitzem les variables categòriques per mitjà de gràfics de barres, per veure la freqüència amb que apareix cada valor.
+categorical_features <- heart[,c("sex", "cp", "fbs", "restecg", "exng", "slp", "caa", "thall", "output")]
+
+for(col in colnames(categorical_features)) {
+    barplot(table(categorical_features[,c(col)]), main=col)
+}
+
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Analitzem visualment les variables numèriques per mitjà d'histogrames.
+numerical_features <- heart[,c("age", "trtbps", "chol", "thalachh", "oldpeak")]
+
+for(col in colnames(numerical_features)) {
+    hist(numerical_features[,c(col)], main=col, xlab=col)
+}
+
+```
+Veient aquests gràfics, ja podem observar com la majoria dels pacients tenen una edat compresa entre 50 i 60 anys, que el sexe 1 és molt més freqüent que el sexe 0 en les observacions, que el nivell de sucre en sang per sota de 120 mg és molt més habitual o que els nivells de colesterol solen estar compresos entre 200 i 300 mg/dl.
+
+******
+# 2. Integració i selecció de les dades
+**Integració i selecció de les dades d’interès a analitzar. Pot ser el resultat d’addicionar diferents datasets o una subselecció útil de les dades originals, en base a l’objectiu que es vulgui aconseguir.**
+
+Com que no tenim accés a més dades dels mateixos pacients, ni a més observacions d'aquestes variables en altres pacients, no podem addicionar altres datasets a l'original. En principi tampoc té sentit fer una subselecció de les dades originals, ja que no sabem si són rellevants o no per a l'objectiu del nostre anàlisi, fonamentalment enfocat a analitzar possibles causes o factors de risc de les malalties cardíaques.
+
+Però es pot mirar si hi ha algunes variables que estiguin molt relacionades i no aportin una informació addicional a l'hora de preveure el risc de desenvolupar una malaltia cardíaca.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+matcor <- cor(heart[,c("cp","trtbps","chol","fbs","restecg", "thalachh", "exng", "oldpeak", "slp", "caa", "thall")],method="pearson", use="pairwise.complete.obs")
+round(matcor, digits=2)
+matcor
+
+```
+Veiem que cap de les combinacions de variables té una correlació important, pel que decidim mantenir el dataset tal i com està.
+
+
+******
+# 3. Neteja de les dades
+## 3.1. Dades no disponibles
+**Les dades contenen zeros o elements buits? Gestiona cadascun d’aquests casos.**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Comprovem si hi ha valors buits amb la funció is.na()
+colSums(is.na(heart))
+
+# Fem una inspecció dels valors únics de cada columna per comprovar si contenen valors buits no detectats amb la funció anterior.
+for(col in colnames(heart)) {
+    print(col)
+    print(unique(heart[[col]]))
+}
+```
+No es detecten valors buits en el dataframe original, per tant no és necessari fer cap tipus d'operació al respecte.
+
+## 3.2. Outliers
+**Identifica i gestiona els valors extrems.**
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Per identificar visualment els outliers en les variables, crearem un box plot de cadascuna.
+
+for(col in colnames(numerical_features)) {
+  print(
+  ggplot(numerical_features, aes(x = numerical_features[,c(col)])) + 
+    geom_boxplot() + 
+    ggtitle(col) + 
+    xlab(col) +
+    theme(axis.line.y = element_blank(), axis.text.y = element_blank())
+  )
+}
+```
+
+En aquesta primera exploració, hem detectat ja que les variables trtbps (pressió sanguínia en repòs), chol(colesterol en sang), thalachh (ritme cardíac màxim) i oldpeak (depressió segment ST a l'electrocardiograma) tenen alguns outliers. En aquest cas, al tractarSe d'un tema mèdic sobre el qual no tenim coneixements previs, i per tant no sabem el significat d'aquests valors per a aquestes variables, nosaltres no podem determinar si el valor atípic es deu a un error del registre que s'hauria d'eliminar o a un cas real a tenir en compte. De cara a la comparació dels grups de dades del nostre anàlisi en el proper punt, es considera més raonable eliminar-los del dataset, ja que són pocs registres i no tindran un impacte significatiu en el resultat final.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Eliminem els outliers segons el criteri "z-score", és a dir aquells valors atípics que estiguin fora del rang de +-3 vegades la desviació estàndard respecte la mitjana.
+heart2 <- heart[abs(heart$trtbps - mean(heart$trtbps)) <= 3 * sd(heart$trtbps),]
+heart2 <- heart2[abs(heart2$chol - mean(heart2$chol)) <= 3 * sd(heart2$chol),]
+heart2 <- heart2[abs(heart2$thalachh - mean(heart2$thalachh)) <= 3 * sd(heart2$thalachh),]
+heart2 <- heart2[abs(heart2$oldpeak - mean(heart2$oldpeak)) <= 3 * sd(heart2$oldpeak),]
+str(heart2)
+```
+Veiem que eliminant aquests valors atípics només hem perdut 9 registres, per tant la mida del nostre dataset no s'ha reduït de forma significativa.
+
+******
+# 4. Anàlisi de les dades
+## 4.1. Selecció de grups
+**Selecció dels grups de dades que es volen analitzar/comparar (p. e., si es volen comparar grups de dades, quins són aquests grups i quins tipus d’anàlisi s’aplicaran?).**
+
+Podem analitzar la variable objectiu des de diverses perspectives, comparant per sexe o per grup d'edat, i també mirant, per exemple, si la pressió sanguínia o el colesterol en sang del pacient tenen alguna influència a l'hora de desenvolupar malalties cardíaques. Com que la variable Age és una variable numèrica, farem una operació de discretització per tal de convertir-la en categòrica i poder comparar entre grups d'edat. Aquests són els tipus d'anàlisi que s'aplicaran per a realitzar les nostres comparacions:
+
+-Per analitzar la variable objectiu 'output', que determina el nivell de risc de patir una malaltia cardíaca, segons el sexe, podem aplicar un test chi-squared.
+
+-Per analitzar si hi ha diferències significatives en la variable pressió sanguínia per grups d'edat, aplicarem un test d'anàlisi de la variancia ANOVA.
+
+-Per analitzar si la variable numèrica contínua chol té una relació amb la variable objectiu, que és dicotòmica, s'hauria de veure primer si la variable dependent té una distribució normal, i, en cas afirmatiu podríem aplicar el test estadístic t-student, que serviria per comparar si les mitjanes del nivell de colesterol són dignifactivament diferents en el grup que té el risc de malaltia cardíaca baix i en el de risc alt.
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Discretitzem la variable age per convertir-la en categòrica.
+heart2$age_group <- cut(heart2$age, breaks=c(0,35,50,65,100), labels = c("<35","35-49","50-65",">65"))
+head(heart2)
+
+```
+
+## 4.2. Comprovació de la normalitat i homogeneïtat de la variància.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# A les variables numèriques que utilitzarem en el nostre anàlisi, els aplicarem tests de normalitat i homoscedasticitat, ja que això ens servirà per determinar quin test estadístic és el més adequat en cada cas. Per això, aplicarem el test de Shapiro-Wilk i el test de Kolmogorov-Smirnova les variables chol i trtbps, el que ens permetrà saber si podem assumir o no la seva normalitat.
+
+ks.test(heart2$chol, pnorm, mean(heart2$chol), sd(heart2$chol))
+
+shapiro.test(heart2$chol)
+
+```
+En ambdos casos, el valor p és superior a 0.05, que és el valor fixat per defecte per determinar si podem rebutjar o no la hipòtesi nul·la, que és que la variable segueix una distribució normal. 
+Com que el valor p no està per sota , no tenim evidència per rebutjar-la i podem assumir que la variable 'chol' segueix una distribució normal.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Repetim el procediment per a la variable trtbps.
+
+ks.test(heart2$trtbps, pnorm, mean(heart2$trtbps), sd(heart2$trtbps))
+
+shapiro.test(heart2$trtbps)
+
+```
+En ambdos casos, el valor p és inferior a 0.05, i per tant podem rebutjar la hipòtesi nul·la i considerar que trtbps no segueix una distribució normal.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Comprovem l'homoscedasticitat de les variables per mitjà del dest de Breusch-Pagan.
+library(lmtest)
+
+# Creem un model de regressió lineal amb les variables output i chol que introduïrem en la funció bptest().
+lmchol <- lm(output ~ chol, data = heart2)
+summary(lmchol)
+
+# Apliquem el test Breusch-Pagan per analitzar l'homogeneïtat de la variància de chol en els diferents grups de la variable output.
+bptest(lmchol)
+```
+Veiem que el valor p és 0.1696, superior a 0.05, el mínim fixat per rebutjar la hipòtesi nul·la. Per tant, no podem rebutjar-la i podem assumir la homogeneïtat en la variància de la variable chol.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Repetim el procediment amb la variable trtbps.
+lmbps <- lm(output ~ trtbps, data = heart2)
+summary(lmbps)
+
+# Apliquem el test Breusch-Pagan per analitzar l'homogeneïtat de la variància de chol en els diferents grups de la variable output.
+bptest(lmbps)
+```
+
+Veiem que el valor p és 0.37, i per tant podem assumir la homogeneïtat en la variància de la variable trtbps.
+
+## 4.3. Proves estadístiques
+**Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l’objectiu de l’estudi, aplicar proves de contrast d’hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d’anàlisi diferents.**
+
+En primer lloc, volem comprovar si hi ha diferències significatives en el risc de malaltia cardíaca entre sexes, és a dir comparar diferències en una variable categòrica entre grups definits per una variable categòrica,i per tant aplicarem el test chi quadrat.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Canviem el valor de les variables categòriques per aclarir els resultats.
+
+heart2$sex[heart2$sex == 0] <- "Sexe 0"
+heart2$sex[heart2$sex == 1] <- "Sexe 1"
+heart2$output[heart2$output == 0] <- "Risc baix"
+heart2$output[heart2$output == 1] <- "Risc alt"
+head(heart2,50)
+```
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Creem la taula amb el recompte de casos que ens servirà per introduir com a paràmetre de la funció chisq.test()
+sex_output_table <- table(heart2$sex, heart2$output)
+sex_output_table
+
+
+chisq.test(sex_output_table)
+```
+Amb aquest valor p, molt per sota de 0.05, i si considerem un nivell de significació del 5%, podem rebutjar la hipòtesi nul·la i concloure que el parell de variables avaluat té una associació estadísticament significativa, és a dir, que la diferència en el risc de patir malalties cardiovasculars entre sexes és significativa.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+```
+Ara analitzarem les diferències de la pressió sanguínia entre grups d'edat, per mitjà d'un test d'anàlisi de la variància. Amb aquest test comparem les variàncies de la variable numèrica trtbps entre cada grup d'edat de la variable age_group.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+heart2.aov <- aov(trtbps ~ age_group, data = heart2)
+summary(heart2.aov)
+heart2.aov
+```
+Observant els resultats del test a la taula, podem veure que el valor p és inferior a 0.05 i per tant podem concloure que la diferència en la pressió sanguínia entre grups és estadísticament significativa.
+
+Per últim, tenint en compte que podem assumir la normalitat de la variable 'chol', aplicarem un test t-student per comprovar si té una influència significativa en el risc de desenvolupar malalties cardíaques.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+t.test(chol ~ output, data = heart2)
+
+```
+El valor p obtingut és major que el nivell de significació del 5%, per tant amb les dades disponibles no s'observa que hi hagi diferències estadísticament significatives entre els pacients amb risc alt i els pacients amb risc baix pel que fa al nivell de colesterol.
+
+******
+## 5. Representació dels resultats
+**A partir de taules i gràfiques. Aquest apartat es pot respondre al llarg de la pràctica, sense la necessitat de concentrar totes les representacions en aquest punt de la pràctica.**
+En l'anàlisi exploratori inicial del conjunt de dades, hem generat diverses visualitzacions per poder observar diferents aspectes de les variables originals. Hem creat gràfics de barres de les variables categòriques per analitzar visualment les seves freqüències, i histogrames i diagrames de caixa de les variables numèriques per veure la seva distribució i variància. 
+
+******
+## 6. Resolució del problema
+**A partir dels resultats obtinguts, quines són les conclusions? Els resultats permeten respondre al problema?**
+
+A partir de les proves estadístiques realitzades, algunes de les conclusions que podem extreure són que hi ha diferències significatives entre sexes pel que fa al risc de desenvolupar malalties cardíaques, o que la pressió sanguínia és variable entre els grups d'edat.
+
+En canvi, sorprenentment, pel que fa a la relació entre el nivell de colesterol i el risc de malaltia, no hem obtingut resultats que ens permetin establir que existeix una diferència significativa.
+
+Aquestes conclusions poden permetre tenir un enfocament més adequat alhora de tractar o investigar les malalties del cor i millorar la seva prevenció. 
+
+
