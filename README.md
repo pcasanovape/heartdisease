@@ -1,7 +1,8 @@
 # Pràctica 2. Tipologia i cicle de vida de les dades
 
 ## Descripció
-**Pràctica 2 de l'assignatura Tipologia i cicle de vida de les dades del Màster de Ciència de dades de la UOC**
+**Pràctica 2 de l'assignatura Tipologia i cicle de vida de les dades del Màster de Ciència de dades de la UOC**.
+
 En aquesta segona pràctica de l’assignatura Tipologia i cicle de vida de les dades s’ha realitzat un projecte d'integració, neteja i anàlisi de dades a partir d'un dataset relacionat amb la prevenció de malalties cardiovasculars.
 
 ## Equip
