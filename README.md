@@ -8,14 +8,13 @@ En aquesta segona pràctica de l’assignatura Tipologia i cicle de vida de les 
 Activitat realitzada per **Pau Casanova Pedrol**.
 
 ## Dataset original
-https:/, /www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
+https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
  
 ## Descripció dels fitxers
+* **dataset/heart.csv**: Dataset original en format .csv descarregat de la pàgina Kaggle.
+* **dataset/heart2.csv**: Dataset final en format .csv generat amb codi R.
+* **images: Carpeta que conté totes les visualitzacions generades amb R durant la realització de la pràctica, en format PNG.
+* **source/pcasanovape_PRA2_TCD.rmd**: Conté el codi R utilitzat per al desenvolupament de la pràctica, amb anotacions sobre cada pas realitzat, en format RMarkdown.
+* **source/pcasanovape_PRA2_TCD.html**: Conté el codi R utilitzat per al desenvolupament de la pràctica, amb anotacions sobre cada pas realitzat, en format HTML.
 
-* **source/requirements.txt**: Conte la informació dels requeriments de l'entorn.
-* **source/main.py**: Punt de entrada del programa. Inicia el process de webscraping.
-* **source/shipWrecks/spiders/shipwreck.py**: Conte la implementacio de la classe que s'encarga de fer el webscraping
-* **source/shipWrecks/settings.py**: Conte la configuració especifica per a les bones practiques del webscaping. Com per exemple el User-agent.
-* **source/postprocess/cleaning.py**: Conte la implementació de funcions per netejar les dades.
-* **source/visualitzacio/shipwreckPlot.py**: Conte la implementació de funcio que s'encarrega de generar la visualització.
 
